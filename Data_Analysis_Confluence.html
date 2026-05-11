@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Patient Services Signal Detection — Data Analysis & Gaps</title>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; color: #172b4d; line-height: 1.6; }
+h1 { color: #00629b; border-bottom: 2px solid #00629b; padding-bottom: 8px; }
+h2 { color: #172b4d; margin-top: 32px; border-bottom: 1px solid #dfe1e6; padding-bottom: 6px; }
+h3 { color: #42526e; margin-top: 24px; }
+table { border-collapse: collapse; width: 100%; margin: 16px 0; }
+th, td { border: 1px solid #dfe1e6; padding: 8px 12px; text-align: left; font-size: 13px; }
+th { background: #f4f5f7; font-weight: 600; }
+tr:nth-child(even) { background: #fafbfc; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: 600; }
+.critical { background: #ffebe6; color: #bf2600; }
+.moderate { background: #fff7e6; color: #974f0c; }
+.good { background: #e3fcef; color: #006644; }
+.callout { background: #deebff; border-left: 4px solid #0052cc; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
+.callout-warn { background: #fffae6; border-left: 4px solid #ff991f; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
+.callout-red { background: #ffebe6; border-left: 4px solid #de350b; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
+ul { margin: 8px 0; padding-left: 24px; }
+li { margin: 4px 0; }
+code { background: #f4f5f7; padding: 2px 4px; border-radius: 3px; font-size: 12px; }
+.section-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #6b778c; font-weight: 600; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<h1>Patient Services Signal Detection — Data Analysis & Recommendations</h1>
+
+<p><strong>Data Source:</strong> <code>Results_2026-04-24-0931.xlsx</code><br>
+<strong>Analysis Date:</strong> May 11, 2026<br>
+<strong>Prototype:</strong> <a href="https://basketj24.github.io/signal-detection-prototype/">Live Prototype (GitHub Pages)</a><br>
+<strong>Scope:</strong> Copay & Voucher claims for Nurtec ODT and Eucrisa</p>
+
+<div class="callout">
+<strong>Purpose:</strong> This document assesses the raw claims data feeding the Signal Detection prototype, identifying what we can and cannot reliably detect, where critical gaps exist, and what actions are needed to close them.
+</div>
+
+<hr>
+
+<h2>1. Dataset Overview</h2>
+
+<table>
+<tr><th>Metric</th><th>Value</th></tr>
+<tr><td>Total Claims</td><td>1,048,575</td></tr>
+<tr><td>Columns</td><td>47</td></tr>
+<tr><td>Date Range (Date of Fill)</td><td>June 2024 – June 2025</td></tr>
+<tr><td>Brands</td><td>Nurtec ODT (multiple NDC labels), Eucrisa</td></tr>
+<tr><td>Program Types</td><td>CO-PAY (17.2%) &amp; VOUCHER (82.8%)</td></tr>
+<tr><td>Vendors</td><td>RELAY (71.2%), ConnectiveRx (13.4%), ERxNetwork (10.5%), Opus (3.8%), RedSail (1.1%)</td></tr>
+</table>
+
+<h2>2. Data Completeness Findings</h2>
+
+<h3>2.1 Fully Populated Fields (Available for All Detection)</h3>
+
+<table>
+<tr><th>Field</th><th>Coverage</th><th>Signal Detection Use</th></tr>
+<tr><td>INITIAL_OUT_OF_POCKET</td><td><span class="tag good">100%</span></td><td>Cost anomaly detection, avg cost per claim</td></tr>
+<tr><td>BENEFIT_PAID</td><td><span class="tag good">100%</span></td><td>Benefit amount outliers, exposure calculation</td></tr>
+<tr><td>REMAINING_OUT_OF_POCKET</td><td><span class="tag good">100%</span></td><td>Patient cost patterns</td></tr>
+<tr><td>DATE_OF_FILL / PROC_DT</td><td><span class="tag good">100%</span></td><td>Time-series trend analysis, volume spikes</td></tr>
+<tr><td>DRUG_NM / DRUG_NDC_NBR</td><td><span class="tag good">100%</span></td><td>Brand-level filtering</td></tr>
+<tr><td>PROGRAM_TYPE</td><td><span class="tag good">100%</span></td><td>CO-PAY vs VOUCHER segmentation</td></tr>
+<tr><td>VNDR_NM</td><td><span class="tag good">100%</span></td><td>Vendor-level analysis and comparison</td></tr>
+<tr><td>PHARMA_ST</td><td><span class="tag good">100%</span></td><td>State-level geographic patterns</td></tr>
+<tr><td>CLAIM_NBR</td><td><span class="tag good">100%</span></td><td>Unique claim identification</td></tr>
+<tr><td>QTY_DISPENSED</td><td><span class="tag good">100%</span></td><td>Quantity outlier detection</td></tr>
+</table>
+
+<h3>2.2 Critical Data Gaps</h3>
+
+<table>
+<tr><th>Field</th><th>% Missing</th><th>Root Cause</th><th>Impact on Signal Detection</th></tr>
+<tr><td>PHARMACY_NAME / CITY / ZIP</td><td><span class="tag critical">71.2%</span></td><td>RELAY vendor provides no pharmacy identity</td><td>Cannot identify specific pharmacies for 71% of claims</td></tr>
+<tr><td>TERR / TERR_NM</td><td><span class="tag critical">100%</span></td><td>Field entirely unpopulated</td><td>No territory/sales rep alignment possible</td></tr>
+<tr><td>PHARMACY_NPI</td><td><span class="tag critical">84.6%</span></td><td>Only ConnectiveRx &amp; ERxNetwork provide</td><td>Cannot reliably deduplicate pharmacies across vendors</td></tr>
+<tr><td>PRESC_FNAME / LNAME</td><td><span class="tag critical">74-75%</span></td><td>RELAY provides no prescriber info</td><td>Prescriber-level analysis limited to 25% of data</td></tr>
+<tr><td>PATIENT_STS</td><td><span class="tag critical">86.6%</span></td><td>Only ConnectiveRx CO-PAY</td><td>Cannot determine new vs. existing patients broadly</td></tr>
+<tr><td>RX_NBR</td><td><span class="tag critical">81.7%</span></td><td>Voucher claims lack Rx numbers</td><td>Cannot track refill patterns for majority</td></tr>
+<tr><td>NUM_OF_REFILLS / DT_WRITTEN</td><td><span class="tag critical">85.6%</span></td><td>Only ConnectiveRx subset</td><td>Refill behavior and prescribing timing mostly invisible</td></tr>
+<tr><td>PROMOTION</td><td><span class="tag critical">84.6%</span></td><td>Sparse across vendors</td><td>Cannot attribute claims to specific promo programs</td></tr>
+<tr><td>DISTRIBUTION_CHANNEL</td><td><span class="tag critical">95.1%</span></td><td>Minimal population</td><td>Cannot segment by channel reliably</td></tr>
+<tr><td>GROUP_NBR</td><td><span class="tag critical">82.1%</span></td><td>Voucher claims lack group</td><td>Cannot do group-level anomaly detection</td></tr>
+</table>
+
+<h3>2.3 Moderate Gaps</h3>
+
+<table>
+<tr><th>Field</th><th>% Missing</th><th>Note</th></tr>
+<tr><td>BRAND</td><td><span class="tag moderate">13.4%</span></td><td>DRUG_NM (100% populated) can substitute</td></tr>
+<tr><td>WAC_PRICE</td><td><span class="tag moderate">13.4%</span></td><td>Missing for all ConnectiveRx claims</td></tr>
+<tr><td>PRESC_TYPE</td><td><span class="tag moderate">13.4%</span></td><td>Missing for ConnectiveRx</td></tr>
+<tr><td>DAYS_SUPPLY</td><td><span class="tag moderate">7.4%</span></td><td>Minor gap, mostly usable</td></tr>
+</table>
+
+<h2>3. The RELAY Blind Spot</h2>
+
+<div class="callout-red">
+<strong>71.2% of all claims come from RELAY with no pharmacy name, city, ZIP, NPI, prescriber name, or Rx number.</strong> This is the single largest constraint on signal detection capabilities.
+</div>
+
+<p>RELAY claims DO provide:</p>
+<ul>
+<li>Full financial data (out-of-pocket, benefit paid, remaining OOP)</li>
+<li>State-level geography (PHARMA_ST)</li>
+<li>Date of fill &amp; processing date</li>
+<li>Drug/NDC information</li>
+<li>Quantity dispensed</li>
+</ul>
+
+<p>RELAY claims DO NOT provide:</p>
+<ul>
+<li>Pharmacy identity (name, city, ZIP, NPI)</li>
+<li>Prescriber identity (name, ID, state)</li>
+<li>Rx number, member number, group number</li>
+<li>New/refill indicator</li>
+<li>Patient status</li>
+</ul>
+
+<h3>Implication</h3>
+<p>The prototype's pharmacy-level views (Top 5 Pharmacies, Pharmacy page, Watch List) can only surface insights from <strong>~29% of claims</strong>. The remaining 71% can only be analyzed at the <strong>state + cost + volume</strong> level — not tied to individual pharmacy actors.</p>
+
+<h2>4. Two Distinct Data Universes</h2>
+
+<table>
+<tr><th>Dimension</th><th>CO-PAY (17.2% of claims)</th><th>VOUCHER (82.8% of claims)</th></tr>
+<tr><td>Primary Vendor</td><td>ConnectiveRx</td><td>RELAY</td></tr>
+<tr><td>Pharmacy Identity</td><td>Full (name, city, ZIP)</td><td>Mostly missing (state only)</td></tr>
+<tr><td>Prescriber Info</td><td>Full (name, ID, state)</td><td>Mostly missing</td></tr>
+<tr><td>Rx/Refill Tracking</td><td>Available</td><td>Not available</td></tr>
+<tr><td>Patient Status</td><td>Available</td><td>Not available</td></tr>
+<tr><td>Financial Data</td><td>Full</td><td>Full</td></tr>
+<tr><td>Signal Detection Potential</td><td>Rich — pharmacy, prescriber, patient-level</td><td>Limited — cost/volume anomalies only</td></tr>
+</table>
+
+<h2>5. Data Quality Concerns</h2>
+
+<h3>5.1 Negative Financial Values</h3>
+<table>
+<tr><th>Field</th><th>Negative Records</th><th>Likely Explanation</th></tr>
+<tr><td>INITIAL_OUT_OF_POCKET</td><td>127,763 (12.2%)</td><td>Claim reversals / adjustments</td></tr>
+<tr><td>BENEFIT_PAID</td><td>127,746 (12.2%)</td><td>Reversed benefits</td></tr>
+<tr><td>REMAINING_OUT_OF_POCKET</td><td>47,478 (4.5%)</td><td>Overpayment corrections</td></tr>
+</table>
+<p>These need to be handled in cost-per-claim calculations — either excluded, netted, or flagged separately — to avoid skewing averages.</p>
+
+<h3>5.2 Pharmacy Identity Fragmentation</h3>
+<ul>
+<li><strong>30,613 unique pharmacy names</strong> vs. <strong>12,258 unique NPIs</strong></li>
+<li>Name-based matching will contain duplicates (spelling variations, DBAs, chain vs. individual store names)</li>
+<li>Without NPI on most records, cross-vendor pharmacy deduplication is unreliable</li>
+</ul>
+
+<h3>5.3 Brand Name Inconsistency</h3>
+<p>7 different <code>DRUG_NM</code> values map to 2 brands:</p>
+<ul>
+<li>Nurtec: "NURTEC TBDP 000075.000", "NURTEC ODT 75 MG TABLET", "NURTEC TAB 75MG ODT", "Nurtec", "NURTEC Tablet Dis 75MG"</li>
+<li>Eucrisa: "EUCRISA", "EUCRISA 2% OINTMENT"</li>
+</ul>
+<p>Normalization logic is needed to map these to canonical brand names.</p>
+
+<h2>6. What the Prototype Can Reliably Support</h2>
+
+<table>
+<tr><th>Prototype Feature</th><th>Data Support</th><th>Confidence</th></tr>
+<tr><td>Average Cost per Claim (overall)</td><td>INITIAL_OUT_OF_POCKET, BENEFIT_PAID — 100% coverage</td><td><span class="tag good">HIGH</span></td></tr>
+<tr><td>Cost trend over time (line chart)</td><td>DATE_OF_FILL + financial fields — 100% coverage</td><td><span class="tag good">HIGH</span></td></tr>
+<tr><td>Claim volume spikes / trends</td><td>DATE_OF_FILL + CLAIM_NBR — 100% coverage</td><td><span class="tag good">HIGH</span></td></tr>
+<tr><td>State-level geographic patterns</td><td>PHARMA_ST — 100% coverage</td><td><span class="tag good">HIGH</span></td></tr>
+<tr><td>Vendor comparison &amp; anomalies</td><td>VNDR_NM + financials — 100% coverage</td><td><span class="tag good">HIGH</span></td></tr>
+<tr><td>Top Pharmacies by exposure</td><td>PHARMACY_NAME + financials — 29% of claims only</td><td><span class="tag moderate">MEDIUM</span></td></tr>
+<tr><td>Pharmacy Watch List</td><td>Requires pharmacy identity — 29% of claims</td><td><span class="tag moderate">MEDIUM</span></td></tr>
+<tr><td>Pharmacy-level investigation</td><td>Requires pharmacy identity — 29% of claims</td><td><span class="tag moderate">MEDIUM</span></td></tr>
+<tr><td>Prescriber-level signals</td><td>PRESC_ID/NAME — 25% coverage only</td><td><span class="tag critical">LOW</span></td></tr>
+<tr><td>Territory / rep views</td><td>TERR/TERR_NM — 0% coverage</td><td><span class="tag critical">NONE</span></td></tr>
+<tr><td>Refill pattern detection</td><td>RX_NBR / NUM_OF_REFILLS — 18% coverage</td><td><span class="tag critical">LOW</span></td></tr>
+<tr><td>New vs. existing patient trends</td><td>PATIENT_STS — 13% coverage</td><td><span class="tag critical">LOW</span></td></tr>
+</table>
+
+<h2>7. Recommendations</h2>
+
+<h3>7.1 Immediate (Data Source Actions)</h3>
+
+<table>
+<tr><th>#</th><th>Action</th><th>Rationale</th><th>Owner</th></tr>
+<tr><td>1</td><td><strong>Request pharmacy-level identifiers from RELAY</strong> (NPI, pharmacy name, or store ID)</td><td>Unlocks signal detection on 71% of claims currently invisible at pharmacy level</td><td>Vendor Management / Data Ops</td></tr>
+<tr><td>2</td><td><strong>Populate TERR/TERR_NM</strong> or provide a mapping table (NPI → territory)</td><td>Enables territory-based views if needed for field force alignment</td><td>Commercial Ops</td></tr>
+<tr><td>3</td><td><strong>Standardize brand/drug name values</strong> across vendors</td><td>5 different Nurtec labels cause fragmentation; need canonical mapping</td><td>Data Engineering</td></tr>
+<tr><td>4</td><td><strong>Clarify handling of negative financial values</strong> — are these reversals? Should they net against original claims?</td><td>12% of records have negative OOP/benefit; affects cost-per-claim accuracy</td><td>Finance / Data Ops</td></tr>
+</table>
+
+<h3>7.2 Prototype Design Adjustments</h3>
+
+<table>
+<tr><th>#</th><th>Recommendation</th><th>Rationale</th></tr>
+<tr><td>1</td><td>Add a <strong>"Data Coverage" indicator</strong> on pharmacy views (e.g., "Based on 29% of claims with pharmacy-level data")</td><td>Sets proper expectations for users on what the numbers represent</td></tr>
+<tr><td>2</td><td>Include <strong>vendor-level signal detection</strong> as a first-class view (not just pharmacy)</td><td>RELAY claims can still surface cost/volume anomalies at vendor level even without pharmacy IDs</td></tr>
+<tr><td>3</td><td>Separate <strong>CO-PAY and VOUCHER signal models</strong> — different data = different detection logic</td><td>Voucher claims need cost/volume heuristics; CO-PAY claims support pharmacy-level profiling</td></tr>
+<tr><td>4</td><td>Add <strong>state-level heatmap or view</strong> for geographic patterns</td><td>State is the only geography field available for all claims</td></tr>
+<tr><td>5</td><td>Consider removing or de-emphasizing prescriber and refill-based signals until data coverage improves</td><td>25% and 18% coverage respectively — conclusions will be misleading if presented as comprehensive</td></tr>
+</table>
+
+<h3>7.3 Future Enhancements (Pending Data Improvements)</h3>
+
+<ul>
+<li><strong>Pharmacy deduplication engine</strong> — once NPI coverage improves, build fuzzy matching + NPI-based linkage to consolidate pharmacy identities across vendors</li>
+<li><strong>Refill velocity tracking</strong> — requires RX_NBR and MEMBER_NBR; only feasible if RELAY provides these or if scoped to CO-PAY only</li>
+<li><strong>Patient journey mapping</strong> — requires PATIENT_STS and member-level linkage; currently only 13% coverage</li>
+<li><strong>Promotion ROI by signal category</strong> — requires PROMOTION field; currently 85% missing</li>
+</ul>
+
+<h2>8. Summary</h2>
+
+<div class="callout">
+<strong>Bottom line:</strong> The data strongly supports <em>cost-based and volume-based</em> signal detection across all claims. However, <em>pharmacy-level</em> detection — which is the core of the current prototype — is limited to ~29% of claims due to RELAY's data gaps. Closing the RELAY blind spot is the highest-impact data action for this initiative.
+</div>
+
+<p>The prototype should be positioned as demonstrating the <em>target-state workflow</em> for signal detection, with the understanding that full pharmacy-level coverage requires upstream data improvements from RELAY.</p>
+
+<hr>
+<p style="font-size: 11px; color: #6b778c; margin-top: 24px;">
+<em>Generated from analysis of Results_2026-04-24-0931.xlsx (1,048,575 claims, 47 fields).</em><br>
+<em>Prototype: <a href="https://basketj24.github.io/signal-detection-prototype/">https://basketj24.github.io/signal-detection-prototype/</a></em>
+</p>
+
+</body>
+</html>
