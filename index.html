@@ -90,6 +90,8 @@ body{font-family:'Noto Sans',sans-serif;font-size:13px;color:var(--text);backgro
 .filter-pill.active{border-color:var(--pfizer-blue);background:var(--pfizer-blue);color:#fff}
 .filter-pill:hover:not(.active){border-color:var(--pfizer-blue);color:var(--pfizer-blue)}
 .filter-select{padding:5px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:#fff;cursor:pointer}
+.search-input{padding:7px 12px 7px 32px;border:1px solid var(--border);border-radius:6px;font-size:12px;outline:none;width:220px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='%23718096' viewBox='0 0 24 24'%3E%3Cpath d='M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z'/%3E%3C/svg%3E") 10px center no-repeat;transition:.2s}
+.search-input:focus{border-color:var(--pfizer-blue);box-shadow:0 0 0 3px rgba(0,98,155,.1)}
 
 /* Tables */
 .data-table{width:100%;border-collapse:collapse;font-size:12px}
@@ -313,6 +315,7 @@ body{font-family:'Noto Sans',sans-serif;font-size:13px;color:var(--text);backgro
         <option value="reversal">Reversal Anomaly</option>
       </select>
       <select class="filter-select" id="filter-pharmacy"></select>
+      <input type="text" class="search-input" id="search-signals" placeholder="Search signals..." oninput="applySignalFilters()">
     </div>
     <table class="data-table" id="signals-table">
       <thead>
@@ -333,6 +336,9 @@ body{font-family:'Noto Sans',sans-serif;font-size:13px;color:var(--text);backgro
 
   <!-- PAGE: PHARMACY -->
   <div class="page" id="page-pharmacy">
+    <div class="filter-bar" style="margin-bottom:12px">
+      <input type="text" class="search-input" id="search-pharmacy" placeholder="Search pharmacies..." oninput="renderPharmacy()">
+    </div>
     <table class="data-table" id="pharmacy-table">
       <thead>
         <tr>
@@ -357,18 +363,21 @@ body{font-family:'Noto Sans',sans-serif;font-size:13px;color:var(--text);backgro
     <div id="watchlist-empty" style="text-align:center;padding:40px;color:var(--text-muted);font-size:13px">
       No pharmacies on the watch list yet. Use the star icon on the Pharmacy page to add.
     </div>
+    <div class="filter-bar" id="watchlist-filter-bar" style="margin-bottom:12px;display:none">
+      <input type="text" class="search-input" id="search-watchlist" placeholder="Search watch list..." oninput="renderWatchList()">
+    </div>
     <table class="data-table" id="watchlist-table" style="display:none">
       <thead>
         <tr>
           <th style="width:32px"></th>
-          <th>Pharmacy</th>
-          <th>City</th>
-          <th>Segment</th>
-          <th>Risk Score</th>
-          <th>$ Exposure</th>
-          <th># Signals</th>
+          <th class="sortable active-sort" data-sort-watch="name">Pharmacy <span class="sort-arrow">&#9660;</span></th>
+          <th class="sortable" data-sort-watch="city">City <span class="sort-arrow"></span></th>
+          <th class="sortable" data-sort-watch="segment">Segment <span class="sort-arrow"></span></th>
+          <th class="sortable" data-sort-watch="risk">Risk Score <span class="sort-arrow"></span></th>
+          <th class="sortable" data-sort-watch="exposure">$ Exposure <span class="sort-arrow"></span></th>
+          <th class="sortable" data-sort-watch="signals"># Signals <span class="sort-arrow"></span></th>
           <th>Investigation Status</th>
-          <th>Added</th>
+          <th class="sortable" data-sort-watch="added">Added <span class="sort-arrow"></span></th>
           <th></th>
         </tr>
       </thead>
@@ -408,6 +417,7 @@ body{font-family:'Noto Sans',sans-serif;font-size:13px;color:var(--text);backgro
         <option value="Medium">Medium</option>
         <option value="Low">Low</option>
       </select>
+      <input type="text" class="search-input" id="search-investigations" placeholder="Search investigations..." oninput="renderInvestigations()">
     </div>
     <div style="overflow-x:auto">
       <table class="inv-table" id="inv-table">
@@ -889,6 +899,14 @@ function applySignalFilters() {
     signals = signals.filter(s => s.pharms.includes(parseInt(pharmFilter)));
   }
 
+  const searchTerm = (document.getElementById('search-signals')?.value || '').toLowerCase();
+  if (searchTerm) {
+    signals = signals.filter(s => {
+      const pharmNames = s.pharms.map(pid => bd.pharmacies.find(p=>p.id===pid)?.name||'').join(' ');
+      return s.name.toLowerCase().includes(searchTerm) || (CATEGORY_LABELS[s.group]||'').toLowerCase().includes(searchTerm) || pharmNames.toLowerCase().includes(searchTerm);
+    });
+  }
+
   // Sort — default "desc" means highest/most important first
   const sDir = sigSort.dir === 'desc' ? 1 : -1;
   switch(sigSort.col) {
@@ -980,6 +998,12 @@ document.getElementById('filter-pharmacy').addEventListener('change', applySigna
 function renderPharmacy(opts) {
   const bd = getBrandData();
   let pharmacies = [...bd.pharmacies];
+
+  const searchTerm = (document.getElementById('search-pharmacy')?.value || '').toLowerCase();
+  if (searchTerm) {
+    pharmacies = pharmacies.filter(p => p.name.toLowerCase().includes(searchTerm) || p.city.toLowerCase().includes(searchTerm) || p.segment.toLowerCase().includes(searchTerm));
+  }
+
   // "desc" means highest/most first (default click)
   const dir = pharmSort.dir === 'desc' ? 1 : -1;
   switch(pharmSort.col) {
@@ -1113,27 +1137,66 @@ document.querySelectorAll('[data-sort-sig]').forEach(th => {
   });
 });
 
+// Column header sorting — Watch List
+document.querySelectorAll('[data-sort-watch]').forEach(th => {
+  th.addEventListener('click', () => {
+    const col = th.dataset.sortWatch;
+    if (watchSort.col === col) { watchSort.dir = watchSort.dir === 'desc' ? 'asc' : 'desc'; }
+    else { watchSort = { col, dir: 'desc' }; }
+    document.querySelectorAll('[data-sort-watch]').forEach(h => { h.classList.remove('active-sort'); h.querySelector('.sort-arrow').innerHTML = ''; });
+    th.classList.add('active-sort');
+    th.querySelector('.sort-arrow').innerHTML = watchSort.dir === 'desc' ? '&#9660;' : '&#9650;';
+    renderWatchList();
+  });
+});
+
 // ============================================================
 // PAGE: WATCH LIST
 // ============================================================
+let watchSort = { col: 'risk', dir: 'desc' };
+
 function renderWatchList() {
   const state = getState();
   const bd = getBrandData();
-  const items = state.watchlist.filter(w => w.brand === currentBrand);
+  let items = state.watchlist.filter(w => w.brand === currentBrand);
 
   if (items.length === 0) {
     document.getElementById('watchlist-empty').style.display = 'block';
     document.getElementById('watchlist-table').style.display = 'none';
+    document.getElementById('watchlist-filter-bar').style.display = 'none';
     return;
   }
 
   document.getElementById('watchlist-empty').style.display = 'none';
   document.getElementById('watchlist-table').style.display = 'table';
+  document.getElementById('watchlist-filter-bar').style.display = 'flex';
 
-  document.getElementById('watchlist-tbody').innerHTML = items.map(item => {
+  // Build enriched list for sorting/search
+  let rows = items.map(item => {
     const pharm = bd.pharmacies.find(p => p.id === item.pharmId);
-    if (!pharm) return '';
-    const exposure = calcPharmExposure(pharm);
+    if (!pharm) return null;
+    return { item, pharm, exposure: calcPharmExposure(pharm), added: item.addedAt };
+  }).filter(Boolean);
+
+  // Search
+  const searchTerm = (document.getElementById('search-watchlist')?.value || '').toLowerCase();
+  if (searchTerm) {
+    rows = rows.filter(r => r.pharm.name.toLowerCase().includes(searchTerm) || r.pharm.city.toLowerCase().includes(searchTerm) || r.pharm.segment.toLowerCase().includes(searchTerm));
+  }
+
+  // Sort
+  const dir = watchSort.dir === 'desc' ? 1 : -1;
+  switch(watchSort.col) {
+    case 'name': rows.sort((a,b) => a.pharm.name.localeCompare(b.pharm.name) * -dir); break;
+    case 'city': rows.sort((a,b) => a.pharm.city.localeCompare(b.pharm.city) * -dir); break;
+    case 'segment': rows.sort((a,b) => a.pharm.segment.localeCompare(b.pharm.segment) * -dir); break;
+    case 'risk': rows.sort((a,b) => (b.pharm.risk - a.pharm.risk) * dir); break;
+    case 'exposure': rows.sort((a,b) => (b.exposure - a.exposure) * dir); break;
+    case 'signals': rows.sort((a,b) => (b.pharm.sigs.length - a.pharm.sigs.length) * dir); break;
+    case 'added': rows.sort((a,b) => (new Date(b.added) - new Date(a.added)) * dir); break;
+  }
+
+  document.getElementById('watchlist-tbody').innerHTML = rows.map(({ item, pharm, exposure }) => {
     const isInv = state.investigations.some(i => i.brand === currentBrand && i.pharmId === pharm.id && i.status !== 'Resolved');
     const invRecord = state.investigations.find(i => i.brand === currentBrand && i.pharmId === pharm.id && i.status !== 'Resolved');
     const invStatus = invRecord ? invRecord.status : 'Not Started';
@@ -1184,6 +1247,14 @@ function renderInvestigations() {
   if (statusFilter !== 'all') investigations = investigations.filter(i => i.status === statusFilter);
   if (assigneeFilter !== 'all') investigations = investigations.filter(i => i.assignee === assigneeFilter);
   if (priorityFilter !== 'all') investigations = investigations.filter(i => i.priority === priorityFilter);
+
+  const searchTerm = (document.getElementById('search-investigations')?.value || '').toLowerCase();
+  if (searchTerm) {
+    investigations = investigations.filter(i => {
+      const pharm = bd.pharmacies.find(p => p.id === i.pharmId);
+      return i.name.toLowerCase().includes(searchTerm) || (pharm?.name||'').toLowerCase().includes(searchTerm) || (i.assignee||'').toLowerCase().includes(searchTerm);
+    });
+  }
 
   if (investigations.length === 0) {
     document.getElementById('inv-empty').style.display = 'block';
