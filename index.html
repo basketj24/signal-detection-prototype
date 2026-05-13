@@ -226,6 +226,7 @@ body{font-family:'Noto Sans',sans-serif;font-size:13px;color:var(--text);backgro
 .product-badge.nurtec{background:#e8f4fd;color:var(--pfizer-blue)}
 .product-badge.eucrisa{background:#f5f0ff;color:var(--purple)}
 .vendor-label{font-size:10.5px;color:var(--text-muted);font-weight:500}
+.hide-product-col .col-product{display:none}
 
 /* Responsive */
 @media(max-width:1100px){
@@ -326,7 +327,7 @@ body{font-family:'Noto Sans',sans-serif;font-size:13px;color:var(--text);backgro
         <option value="reversal">Reversal Anomaly</option>
       </select>
       <select class="filter-select" id="filter-pharmacy"></select>
-      <select class="filter-select" id="filter-vendor">
+      <select class="filter-select col-product" id="filter-vendor">
         <option value="all">All Vendors</option>
         <option value="Relay">Relay</option>
         <option value="ConnectiveRx">ConnectiveRx</option>
@@ -344,8 +345,8 @@ body{font-family:'Noto Sans',sans-serif;font-size:13px;color:var(--text);backgro
           <th class="sortable" data-sort-sig="category">Category <span class="sort-arrow"></span></th>
           <th class="sortable active-sort" data-sort-sig="priority">Priority <span class="sort-arrow">&#9660;</span></th>
           <th class="sortable" data-sort-sig="pharmacy">Pharmacy <span class="sort-arrow"></span></th>
-          <th id="sig-product-col" class="sortable" data-sort-sig="product">Product <span class="sort-arrow"></span></th>
-          <th id="sig-vendor-col">Vendor</th>
+          <th class="col-product sortable" data-sort-sig="product">Product <span class="sort-arrow"></span></th>
+          <th class="col-product">Vendor</th>
           <th class="sortable" data-sort-sig="exposure">$ Exposure <span class="sort-arrow"></span></th>
           <th class="sortable" data-sort-sig="detected">Detected <span class="sort-arrow"></span></th>
           <th>Status</th>
@@ -368,8 +369,8 @@ body{font-family:'Noto Sans',sans-serif;font-size:13px;color:var(--text);backgro
           <th class="sortable" data-sort-pharm="name">Pharmacy <span class="sort-arrow"></span></th>
           <th class="sortable" data-sort-pharm="city">City <span class="sort-arrow"></span></th>
           <th class="sortable" data-sort-pharm="segment">Segment <span class="sort-arrow"></span></th>
-          <th id="pharm-product-col" class="sortable" data-sort-pharm="product">Product <span class="sort-arrow"></span></th>
-          <th id="pharm-vendor-col">Vendor</th>
+          <th class="col-product sortable" data-sort-pharm="product">Product <span class="sort-arrow"></span></th>
+          <th class="col-product">Vendor</th>
           <th class="sortable active-sort" data-sort-pharm="risk">Risk Score <span class="sort-arrow">&#9660;</span></th>
           <th class="sortable" data-sort-pharm="exposure">$ Exposure <span class="sort-arrow"></span></th>
           <th class="sortable" data-sort-pharm="signals"># Signals <span class="sort-arrow"></span></th>
@@ -396,8 +397,8 @@ body{font-family:'Noto Sans',sans-serif;font-size:13px;color:var(--text);backgro
           <th class="sortable active-sort" data-sort-watch="name">Pharmacy <span class="sort-arrow">&#9660;</span></th>
           <th class="sortable" data-sort-watch="city">City <span class="sort-arrow"></span></th>
           <th class="sortable" data-sort-watch="segment">Segment <span class="sort-arrow"></span></th>
-          <th>Product</th>
-          <th>Vendor</th>
+          <th class="col-product">Product</th>
+          <th class="col-product">Vendor</th>
           <th class="sortable" data-sort-watch="risk">Risk Score <span class="sort-arrow"></span></th>
           <th class="sortable" data-sort-watch="exposure">$ Exposure <span class="sort-arrow"></span></th>
           <th class="sortable" data-sort-watch="signals"># Signals <span class="sort-arrow"></span></th>
@@ -656,6 +657,7 @@ function getItemBrand(item) {
 function switchBrand(val) {
   currentBrand = val;
   document.getElementById('brand-select').value = val;
+  document.body.classList.toggle('hide-product-col', val !== 'all');
   updateVendorTag();
   renderCurrentPage();
 }
@@ -835,7 +837,7 @@ function renderSummary() {
     <div class="list-item" onclick="navigateTo('signals',{highlight:${s.id}})">
       <div>
         <div class="li-name">${priorityBadge(s.tier)} ${s.name}</div>
-        <div class="li-sub">${s.pharms.map(pid => bd.pharmacies.find(p=>p.id===pid)?.name).join(', ')}${currentBrand === 'all' ? ' · <strong>' + getProductLabel(s) + '</strong> via ' + getVendorLabel(s) : ''}</div>
+        <div class="li-sub">${s.pharms.map(pid => bd.pharmacies.find(p=>p.id===pid)?.name).join(', ')}${currentBrand === 'all' ? ' · <strong>' + getProductLabel(s) + '</strong> · ' + getVendorLabel(s) : ''}</div>
       </div>
       <div class="exposure small">${calcExposure(s) > 0 ? formatMoney(calcExposure(s)) : '<span class="exposure-zero">Risk signal</span>'}</div>
     </div>
@@ -1039,8 +1041,8 @@ function applySignalFilters() {
       <td>${CATEGORY_LABELS[s.group] || s.group}</td>
       <td>${priorityBadge(s.tier)}</td>
       <td>${pharmNames}</td>
-      <td>${product}</td>
-      <td><span style="font-size:11px;color:var(--text-secondary)">${vendor}</span></td>
+      <td class="col-product">${product}</td>
+      <td class="col-product"><span style="font-size:11px;color:var(--text-secondary)">${vendor}</span></td>
       <td>${exposure > 0 ? '<span class="exposure small">' + formatMoney(exposure) + '</span>' : '<span style="color:var(--text-muted);font-size:11px">—</span>'}</td>
       <td style="font-size:11px;color:var(--text-muted)">${s.daysAgo}d ago</td>
       <td><span class="status-pill ${statusCls}">${status}</span></td>
@@ -1049,7 +1051,7 @@ function applySignalFilters() {
       <td colspan="10">
         <div class="pharm-detail-content">
           <div style="max-width:700px">
-            <div style="display:flex;gap:8px;margin-bottom:8px"><span class="badge badge-low">${product}</span><span style="font-size:11px;color:var(--text-muted);align-self:center">via ${vendor}</span></div>
+            ${currentBrand === 'all' ? '<div style="display:flex;gap:8px;margin-bottom:8px"><span class="badge badge-low">' + product + '</span><span style="font-size:11px;color:var(--text-muted);align-self:center">via ' + vendor + '</span></div>' : ''}
             <div class="description" style="font-size:12px;color:var(--text-secondary);margin-bottom:10px">${s.desc}</div>
             <div class="nba"><strong>Next Best Action:</strong> ${s.nba}</div>
             <div class="pharm-chips" style="margin-top:10px">
@@ -1139,8 +1141,8 @@ function renderPharmacy(opts) {
       <td><strong>${p.name}</strong>${isInv ? '<span class="inv-indicator">Investigating</span>' : ''}</td>
       <td>${p.city}</td>
       <td style="text-transform:capitalize">${p.segment}</td>
-      <td>${product}</td>
-      <td><span style="font-size:11px;color:var(--text-secondary)">${vendor}</span></td>
+      <td class="col-product">${product}</td>
+      <td class="col-product"><span style="font-size:11px;color:var(--text-secondary)">${vendor}</span></td>
       <td><strong>${p.risk}</strong></td>
       <td><span class="exposure small">${formatMoney(exposure)}</span></td>
       <td>${p.sigs.length}</td>
@@ -1333,8 +1335,8 @@ function renderWatchList() {
       <td><strong>${pharm.name}</strong></td>
       <td>${pharm.city}</td>
       <td style="text-transform:capitalize">${pharm.segment}</td>
-      <td>${product}</td>
-      <td><span style="font-size:11px;color:var(--text-secondary)">${vendor}</span></td>
+      <td class="col-product">${product}</td>
+      <td class="col-product"><span style="font-size:11px;color:var(--text-secondary)">${vendor}</span></td>
       <td><strong>${pharm.risk}</strong></td>
       <td><span class="exposure small">${formatMoney(exposure)}</span></td>
       <td>${pharm.sigs.length}</td>
@@ -1812,6 +1814,7 @@ function generateChatResponse(msg) {
 // ============================================================
 // INITIALIZATION
 // ============================================================
+document.body.classList.toggle('hide-product-col', currentBrand !== 'all');
 updateVendorTag();
 renderSummary();
 </script>
