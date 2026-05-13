@@ -222,9 +222,11 @@ body{font-family:'Noto Sans',sans-serif;font-size:13px;color:var(--text);backgro
 .inv-indicator::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--amber);display:inline-block}
 
 /* Product & Vendor indicators */
-.product-badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:.3px}
+.product-badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:.3px;margin-right:3px}
+.product-badge:last-child{margin-right:0}
 .product-badge.nurtec{background:#e8f4fd;color:var(--pfizer-blue)}
 .product-badge.eucrisa{background:#f5f0ff;color:var(--purple)}
+.multi-vendor{display:inline-flex;gap:4px;flex-wrap:wrap}
 .vendor-label{font-size:10.5px;color:var(--text-muted);font-weight:500}
 .hide-product-col .col-product-only{display:none}
 
@@ -555,20 +557,20 @@ const DATA = {
     baseline: 1.43,
     segmentData: { chain: 1.43, independent: 2.88, risrx: 1.91 },
     signals: [
-      { id:1, group:'cost', tier:3, name:'Payout 2.4x chain pharmacy baseline', pharms:[1], desc:'CareRx Plus averaging $3.42/claim vs $1.43 chain baseline — 2.4x multiplier on 183 claims', nba:'Request itemized claims breakdown from vendor. Compare NDC-level pricing.', daysAgo:2 },
-      { id:2, group:'cost', tier:2, name:'Cost per claim at or near program maximum', pharms:[2], desc:'SunCare Pharmacy at $3.11/claim approaching program cap. 97 claims in review period.', nba:'Audit claim-level detail for duplicate submissions or pricing anomalies.', daysAgo:5 },
-      { id:3, group:'cost', tier:2, name:'Pre/Post RisRx list — trend shift in avg cost', pharms:[3], desc:'MedPath Rx cost shifted from $1.52 to $2.28 after RisRx enrollment. 64 claims.', nba:'Compare pre/post RisRx enrollment cost trajectory. Flag for vendor review.', daysAgo:12 },
-      { id:4, group:'quantity', tier:3, name:'Sudden jump in avg quantity per dispense', pharms:[1,2], desc:'Both CareRx Plus and SunCare showing 40%+ increase in avg units per fill vs prior 6-month baseline.', nba:'Pull dispense-level detail. Compare to prescriber patterns and patient panel size.', daysAgo:1 },
-      { id:5, group:'hcp', tier:2, name:'High HCP utilization at CareRx Plus', pharms:[1], desc:'Single prescriber (NPI ending 4421) accounts for 78% of volume at CareRx Plus. Concentration risk.', nba:'Cross-reference prescriber with other pharmacies in network. Check for exclusivity patterns.', daysAgo:8 },
-      { id:6, group:'popup', tier:3, name:'First redemption — NPI not in CDW', pharms:[4], desc:'NovaMed Pharmacy submitted first claims with NPI not found in Claims Data Warehouse. 31 claims at $3.88/unit.', nba:'Immediate vendor outreach. Validate NPI registration and DEA status.', daysAgo:3 },
-      { id:7, group:'popup', tier:1, name:'Dormant NPI reactivated — immediate high volume', pharms:[5], desc:'Pinnacle Rx NPI was inactive 18 months, reactivated with immediate 61 claims. Low cost delta but pattern flagged.', nba:'Monitor for 30 days. Low financial exposure but behavioral pattern of interest.', daysAgo:6 }
+      { id:1, group:'cost', tier:3, name:'Payout 2.4x chain pharmacy baseline', pharms:[1], products:['nurtec'], desc:'CareRx Plus averaging $3.42/claim vs $1.43 chain baseline — 2.4x multiplier on 183 claims', nba:'Request itemized claims breakdown from vendor. Compare NDC-level pricing.', daysAgo:2 },
+      { id:2, group:'cost', tier:2, name:'Cost per claim at or near program maximum', pharms:[2], products:['nurtec'], desc:'SunCare Pharmacy at $3.11/claim approaching program cap. 97 claims in review period.', nba:'Audit claim-level detail for duplicate submissions or pricing anomalies.', daysAgo:5 },
+      { id:3, group:'cost', tier:2, name:'Pre/Post RisRx list — trend shift in avg cost', pharms:[3], products:['nurtec'], desc:'MedPath Rx cost shifted from $1.52 to $2.28 after RisRx enrollment. 64 claims.', nba:'Compare pre/post RisRx enrollment cost trajectory. Flag for vendor review.', daysAgo:12 },
+      { id:4, group:'quantity', tier:3, name:'Sudden jump in avg quantity per dispense', pharms:[1,2], products:['nurtec','eucrisa'], desc:'CareRx Plus, SunCare, and WellPoint all showing 40%+ increase in avg units per fill vs prior 6-month baseline. Pattern spans Nurtec (Relay) and Eucrisa (ConnectiveRx).', nba:'Pull dispense-level detail across both vendors. Compare to prescriber patterns and patient panel size. Coordinate with Relay and ConnectiveRx.', daysAgo:1 },
+      { id:5, group:'hcp', tier:2, name:'High HCP utilization at CareRx Plus', pharms:[1], products:['nurtec','eucrisa'], desc:'Single prescriber (NPI ending 4421) accounts for 78% of Nurtec volume and 65% of Eucrisa volume at CareRx Plus. Concentration risk across both programs.', nba:'Cross-reference prescriber with other pharmacies in network. Check for exclusivity patterns across both copay programs.', daysAgo:8 },
+      { id:6, group:'popup', tier:3, name:'First redemption — NPI not in CDW', pharms:[4], products:['nurtec'], desc:'NovaMed Pharmacy submitted first claims with NPI not found in Claims Data Warehouse. 31 claims at $3.88/unit.', nba:'Immediate vendor outreach. Validate NPI registration and DEA status.', daysAgo:3 },
+      { id:7, group:'popup', tier:1, name:'Dormant NPI reactivated — immediate high volume', pharms:[5], products:['nurtec'], desc:'Pinnacle Rx NPI was inactive 18 months, reactivated with immediate 61 claims. Low cost delta but pattern flagged.', nba:'Monitor for 30 days. Low financial exposure but behavioral pattern of interest.', daysAgo:6 }
     ],
     pharmacies: [
-      { id:1, name:'CareRx Plus', city:'Dallas, TX', risk:96, segment:'independent', cpu:3.42, baseline:1.43, vol:183, sigs:[1,4,5], enrolled:'2024-08-15', reversalRate:'4.2%' },
-      { id:2, name:'SunCare Pharmacy', city:'Houston, TX', risk:84, segment:'independent', cpu:3.11, baseline:1.43, vol:97, sigs:[2,4], enrolled:'2024-06-01', reversalRate:'2.8%' },
-      { id:3, name:'MedPath Rx', city:'Atlanta, GA', risk:71, segment:'risrx', cpu:2.28, baseline:1.43, vol:64, sigs:[3], enrolled:'2024-11-20', reversalRate:'1.5%' },
-      { id:4, name:'NovaMed Pharmacy', city:'Phoenix, AZ', risk:99, segment:'independent', cpu:3.88, baseline:1.43, vol:31, sigs:[6], enrolled:'2025-04-01', reversalRate:'0%' },
-      { id:5, name:'Pinnacle Rx', city:'Seattle, WA', risk:62, segment:'chain', cpu:1.71, baseline:1.43, vol:61, sigs:[7], enrolled:'2023-02-10', reversalRate:'1.1%' }
+      { id:1, name:'CareRx Plus', city:'Dallas, TX', risk:96, segment:'independent', cpu:3.42, baseline:1.43, vol:183, sigs:[1,4,5], products:['nurtec','eucrisa'], vendors:['Relay','ConnectiveRx'], enrolled:'2024-08-15', reversalRate:'4.2%' },
+      { id:2, name:'SunCare Pharmacy', city:'Houston, TX', risk:84, segment:'independent', cpu:3.11, baseline:1.43, vol:97, sigs:[2,4], products:['nurtec'], vendors:['Relay'], enrolled:'2024-06-01', reversalRate:'2.8%' },
+      { id:3, name:'MedPath Rx', city:'Atlanta, GA', risk:71, segment:'risrx', cpu:2.28, baseline:1.43, vol:64, sigs:[3], products:['nurtec'], vendors:['Relay'], enrolled:'2024-11-20', reversalRate:'1.5%' },
+      { id:4, name:'NovaMed Pharmacy', city:'Phoenix, AZ', risk:99, segment:'independent', cpu:3.88, baseline:1.43, vol:31, sigs:[6], products:['nurtec'], vendors:['Relay'], enrolled:'2025-04-01', reversalRate:'0%' },
+      { id:5, name:'Pinnacle Rx', city:'Seattle, WA', risk:62, segment:'chain', cpu:1.71, baseline:1.43, vol:61, sigs:[7], products:['nurtec'], vendors:['Relay'], enrolled:'2023-02-10', reversalRate:'1.1%' }
     ]
   },
   eucrisa: {
@@ -577,18 +579,18 @@ const DATA = {
     baseline: 0.89,
     segmentData: { chain: 0.89, independent: 2.14, risrx: 1.42 },
     signals: [
-      { id:101, group:'cost', tier:3, name:'WellPoint Pharmacy $2.76 vs $0.89 baseline', pharms:[101], desc:'WellPoint averaging $2.76/tube vs $0.89 chain baseline. 142 claims — 3.1x multiplier.', nba:'Immediate vendor inquiry. Request claim-level NDC and quantity detail.', daysAgo:1 },
-      { id:102, group:'cost', tier:2, name:'DermaCare Rx elevated cost per claim', pharms:[102], desc:'DermaCare Rx at $2.18/tube, 2.4x baseline on 88 claims. Trending upward over 3 months.', nba:'Pull 90-day trend. Compare to other independents in region.', daysAgo:4 },
-      { id:103, group:'quantity', tier:2, name:'SkinFirst quantity anomaly', pharms:[103], desc:'SkinFirst showing 2.2x normal quantity per dispense. 53 claims at elevated volume.', nba:'Review dispense quantities vs typical dermatology prescribing patterns.', daysAgo:9 },
-      { id:104, group:'reversal', tier:2, name:'WellPoint reversal pattern anomaly', pharms:[101], desc:'WellPoint showing 12% reversal rate vs 2% network average. Pattern suggests submit-reverse-resubmit cycling.', nba:'Request reversal detail with timestamps. Check for same-day reversal/resubmit patterns.', daysAgo:3 },
-      { id:105, group:'popup', tier:3, name:'ClearSkin Pharmacy — new NPI, high cost', pharms:[104], desc:'ClearSkin first appeared 3 weeks ago with $3.02/tube — 3.4x baseline. 22 claims from unknown NPI.', nba:'Validate NPI. Check for common ownership with other flagged pharmacies.', daysAgo:2 },
-      { id:106, group:'quantity', tier:1, name:'DermaCare gradual quantity uptick', pharms:[102], desc:'DermaCare showing slow 15% increase in avg tubes per fill over 6 months. Monitoring pattern.', nba:'Continue monitoring. Flag if exceeds 25% threshold.', daysAgo:14 }
+      { id:101, group:'cost', tier:3, name:'WellPoint Pharmacy $2.76 vs $0.89 baseline', pharms:[101], products:['eucrisa'], desc:'WellPoint averaging $2.76/tube vs $0.89 chain baseline. 142 claims — 3.1x multiplier.', nba:'Immediate vendor inquiry. Request claim-level NDC and quantity detail.', daysAgo:1 },
+      { id:102, group:'cost', tier:2, name:'DermaCare Rx elevated cost per claim', pharms:[102], products:['eucrisa'], desc:'DermaCare Rx at $2.18/tube, 2.4x baseline on 88 claims. Trending upward over 3 months.', nba:'Pull 90-day trend. Compare to other independents in region.', daysAgo:4 },
+      { id:103, group:'quantity', tier:2, name:'SkinFirst quantity anomaly', pharms:[103], products:['eucrisa'], desc:'SkinFirst showing 2.2x normal quantity per dispense. 53 claims at elevated volume.', nba:'Review dispense quantities vs typical dermatology prescribing patterns.', daysAgo:9 },
+      { id:104, group:'reversal', tier:2, name:'WellPoint reversal pattern anomaly', pharms:[101], products:['eucrisa','nurtec'], desc:'WellPoint showing 12% reversal rate vs 2% network average across both Eucrisa (ConnectiveRx) and Nurtec (Relay) programs. Pattern suggests submit-reverse-resubmit cycling on both.', nba:'Request reversal detail with timestamps from both ConnectiveRx and Relay. Check for same-day reversal/resubmit patterns.', daysAgo:3 },
+      { id:105, group:'popup', tier:3, name:'ClearSkin Pharmacy — new NPI, high cost', pharms:[104], products:['eucrisa'], desc:'ClearSkin first appeared 3 weeks ago with $3.02/tube — 3.4x baseline. 22 claims from unknown NPI.', nba:'Validate NPI. Check for common ownership with other flagged pharmacies.', daysAgo:2 },
+      { id:106, group:'quantity', tier:1, name:'DermaCare gradual quantity uptick', pharms:[102], products:['eucrisa'], desc:'DermaCare showing slow 15% increase in avg tubes per fill over 6 months. Monitoring pattern.', nba:'Continue monitoring. Flag if exceeds 25% threshold.', daysAgo:14 }
     ],
     pharmacies: [
-      { id:101, name:'WellPoint Pharmacy', city:'Chicago, IL', risk:93, segment:'independent', cpu:2.76, baseline:0.89, vol:142, sigs:[101,104], enrolled:'2024-05-12', reversalRate:'12.1%' },
-      { id:102, name:'DermaCare Rx', city:'Miami, FL', risk:78, segment:'independent', cpu:2.18, baseline:0.89, vol:88, sigs:[102,106], enrolled:'2024-07-22', reversalRate:'3.2%' },
-      { id:103, name:'SkinFirst Pharmacy', city:'Denver, CO', risk:68, segment:'independent', cpu:1.44, baseline:0.89, vol:53, sigs:[103], enrolled:'2024-09-05', reversalRate:'1.8%' },
-      { id:104, name:'ClearSkin Pharmacy', city:'Portland, OR', risk:97, segment:'independent', cpu:3.02, baseline:0.89, vol:22, sigs:[105], enrolled:'2025-04-15', reversalRate:'0%' }
+      { id:101, name:'WellPoint Pharmacy', city:'Chicago, IL', risk:93, segment:'independent', cpu:2.76, baseline:0.89, vol:142, sigs:[101,104], products:['eucrisa','nurtec'], vendors:['ConnectiveRx','Relay'], enrolled:'2024-05-12', reversalRate:'12.1%' },
+      { id:102, name:'DermaCare Rx', city:'Miami, FL', risk:78, segment:'independent', cpu:2.18, baseline:0.89, vol:88, sigs:[102,106], products:['eucrisa'], vendors:['ConnectiveRx'], enrolled:'2024-07-22', reversalRate:'3.2%' },
+      { id:103, name:'SkinFirst Pharmacy', city:'Denver, CO', risk:68, segment:'independent', cpu:1.44, baseline:0.89, vol:53, sigs:[103], products:['eucrisa'], vendors:['ConnectiveRx'], enrolled:'2024-09-05', reversalRate:'1.8%' },
+      { id:104, name:'ClearSkin Pharmacy', city:'Portland, OR', risk:97, segment:'independent', cpu:3.02, baseline:0.89, vol:22, sigs:[105], products:['eucrisa'], vendors:['ConnectiveRx'], enrolled:'2025-04-15', reversalRate:'0%' }
     ]
   }
 };
@@ -629,24 +631,58 @@ function getBrandData() {
       risrx: (nurtec.segmentData.risrx + eucrisa.segmentData.risrx) / 2
     },
     signals: [
-      ...nurtec.signals.map(s => ({...s, _brand: 'nurtec', _product: 'Nurtec', _vendor: 'Relay'})),
-      ...eucrisa.signals.map(s => ({...s, _brand: 'eucrisa', _product: 'Eucrisa', _vendor: 'ConnectiveRx'}))
+      ...nurtec.signals.map(s => ({...s, _brand: 'nurtec', _product: 'Nurtec', _vendor: 'Relay', products: s.products || ['nurtec']})),
+      ...eucrisa.signals.map(s => ({...s, _brand: 'eucrisa', _product: 'Eucrisa', _vendor: 'ConnectiveRx', products: s.products || ['eucrisa']}))
     ],
     pharmacies: [
-      ...nurtec.pharmacies.map(p => ({...p, _brand: 'nurtec', _product: 'Nurtec', _vendor: 'Relay'})),
-      ...eucrisa.pharmacies.map(p => ({...p, _brand: 'eucrisa', _product: 'Eucrisa', _vendor: 'ConnectiveRx'}))
+      ...nurtec.pharmacies.map(p => ({...p, _brand: 'nurtec', _product: 'Nurtec', _vendor: 'Relay', products: p.products || ['nurtec'], vendors: p.vendors || ['Relay']})),
+      ...eucrisa.pharmacies.map(p => ({...p, _brand: 'eucrisa', _product: 'Eucrisa', _vendor: 'ConnectiveRx', products: p.products || ['eucrisa'], vendors: p.vendors || ['ConnectiveRx']}))
     ]
   };
 }
 
-function getProductLabel(signal) {
+function getProductLabel(item) {
+  if (item.products && item.products.length > 1) {
+    return item.products.map(p => DATA[p]?.brand || p).join(', ');
+  }
   if (currentBrand !== 'all') return DATA[currentBrand].brand;
-  return signal._product || '';
+  return item._product || '';
 }
 
 function getVendorLabel(item) {
+  if (item.vendors && item.vendors.length > 1) {
+    return item.vendors.join(', ');
+  }
+  if (item.products && item.products.length > 1) {
+    return item.products.map(p => DATA[p]?.vendor || '').join(', ');
+  }
   if (currentBrand !== 'all') return DATA[currentBrand].vendor;
   return item._vendor || '';
+}
+
+function getProductBadges(item) {
+  const products = item.products || (item._product ? [item._brand] : []);
+  if (products.length <= 1) {
+    const product = getProductLabel(item);
+    const brand = products[0] || item._brand || currentBrand;
+    const cls = brand === 'eucrisa' ? 'eucrisa' : 'nurtec';
+    return `<span class="product-badge ${cls}">${product}</span>`;
+  }
+  return products.map(p => {
+    const cls = p === 'eucrisa' ? 'eucrisa' : 'nurtec';
+    return `<span class="product-badge ${cls}">${DATA[p]?.brand || p}</span>`;
+  }).join(' ');
+}
+
+function getVendorBadges(item) {
+  const products = item.products || (item._product ? [item._brand] : []);
+  if (products.length <= 1) {
+    return `<span style="font-size:10px;color:var(--text-secondary);padding:1px 5px;background:var(--bg);border-radius:3px;border:1px solid var(--border)">${getVendorLabel(item)}</span>`;
+  }
+  return products.map(p => {
+    const vendor = DATA[p]?.vendor || '';
+    return `<span style="font-size:10px;color:var(--text-secondary);padding:1px 5px;background:var(--bg);border-radius:3px;border:1px solid var(--border)">${vendor}</span>`;
+  }).join(' ');
 }
 
 function getItemBrand(item) {
@@ -837,7 +873,7 @@ function renderSummary() {
     <div class="list-item" onclick="navigateTo('signals',{highlight:${s.id}})">
       <div>
         <div class="li-name">${priorityBadge(s.tier)} ${s.name}</div>
-        <div class="li-sub">${s.pharms.map(pid => bd.pharmacies.find(p=>p.id===pid)?.name).join(', ')}${currentBrand === 'all' ? ' · <strong>' + getProductLabel(s) + '</strong> · ' + getVendorLabel(s) : ''}</div>
+        <div class="li-sub">${s.pharms.map(pid => bd.pharmacies.find(p=>p.id===pid)?.name).join(', ')}${currentBrand === 'all' ? ' · ' + getProductBadges(s) + ' · ' + getVendorLabel(s) : ''}</div>
       </div>
       <div class="exposure small">${calcExposure(s) > 0 ? formatMoney(calcExposure(s)) : '<span class="exposure-zero">Risk signal</span>'}</div>
     </div>
@@ -852,7 +888,7 @@ function renderSummary() {
     return `<div class="list-item" onclick="navigateTo('pharmacy',{highlight:${p.id}})">
       <div>
         <div class="li-name">${isWatched ? '<span style="color:#d4a017;margin-right:4px">&#9733;</span>' : ''}${p.name}${hasInv ? '<span class="inv-indicator">Investigating</span>' : ''}</div>
-        <div class="li-sub">${p.city} &middot; Risk ${p.risk}${currentBrand === 'all' ? ' · <strong>' + getProductLabel(p) + '</strong> via ' + getVendorLabel(p) : ''}</div>
+        <div class="li-sub">${p.city} &middot; Risk ${p.risk}${currentBrand === 'all' ? ' · ' + getProductBadges(p) + ' via ' + getVendorLabel(p) : ''}</div>
       </div>
       <div class="exposure small">${formatMoney(calcPharmExposure(p))}</div>
     </div>`;
@@ -866,7 +902,7 @@ function renderSummary() {
       <div class="list-item" onclick="navigateTo('signals',{highlight:${s.id}})">
         <div>
           <div class="li-name">${priorityBadge(s.tier)} ${s.name}</div>
-          <div class="li-sub">${s.daysAgo} day${s.daysAgo>1?'s':''} ago${currentBrand === 'all' ? ' · ' + getProductLabel(s) + ' (' + getVendorLabel(s) + ')' : ''}</div>
+          <div class="li-sub">${s.daysAgo} day${s.daysAgo>1?'s':''} ago${currentBrand === 'all' ? ' · ' + getProductBadges(s) + ' (' + getVendorLabel(s) + ')' : ''}</div>
         </div>
         <div class="exposure small">${calcExposure(s) > 0 ? formatMoney(calcExposure(s)) : '<span class="exposure-zero">Risk signal</span>'}</div>
       </div>
@@ -1041,8 +1077,8 @@ function applySignalFilters() {
       <td>${CATEGORY_LABELS[s.group] || s.group}</td>
       <td>${priorityBadge(s.tier)}</td>
       <td>${pharmNames}</td>
-      <td class="col-product-only">${product}</td>
-      <td><span style="font-size:11px;color:var(--text-secondary)">${vendor}</span></td>
+      <td class="col-product-only">${getProductBadges(s)}</td>
+      <td>${getVendorBadges(s)}</td>
       <td>${exposure > 0 ? '<span class="exposure small">' + formatMoney(exposure) + '</span>' : '<span style="color:var(--text-muted);font-size:11px">—</span>'}</td>
       <td style="font-size:11px;color:var(--text-muted)">${s.daysAgo}d ago</td>
       <td><span class="status-pill ${statusCls}">${status}</span></td>
@@ -1051,7 +1087,7 @@ function applySignalFilters() {
       <td colspan="10">
         <div class="pharm-detail-content">
           <div style="max-width:700px">
-            ${currentBrand === 'all' ? '<div style="display:flex;gap:8px;margin-bottom:8px"><span class="badge badge-low">' + product + '</span><span style="font-size:11px;color:var(--text-muted);align-self:center">via ' + vendor + '</span></div>' : ''}
+            ${currentBrand === 'all' ? '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px">' + getProductBadges(s) + '<span style="font-size:11px;color:var(--text-muted)">via</span>' + getVendorBadges(s) + '</div>' : ''}
             <div class="description" style="font-size:12px;color:var(--text-secondary);margin-bottom:10px">${s.desc}</div>
             <div class="nba"><strong>Next Best Action:</strong> ${s.nba}</div>
             <div class="pharm-chips" style="margin-top:10px">
@@ -1141,8 +1177,8 @@ function renderPharmacy(opts) {
       <td><strong>${p.name}</strong>${isInv ? '<span class="inv-indicator">Investigating</span>' : ''}</td>
       <td>${p.city}</td>
       <td style="text-transform:capitalize">${p.segment}</td>
-      <td class="col-product-only">${product}</td>
-      <td><span style="font-size:11px;color:var(--text-secondary)">${vendor}</span></td>
+      <td class="col-product-only">${getProductBadges(p)}</td>
+      <td>${getVendorBadges(p)}</td>
       <td><strong>${p.risk}</strong></td>
       <td><span class="exposure small">${formatMoney(exposure)}</span></td>
       <td>${p.sigs.length}</td>
@@ -1153,8 +1189,8 @@ function renderPharmacy(opts) {
         <div class="pharm-detail-content">
           <div class="pharm-detail-grid">
             <div class="pharm-detail-info">
-              ${currentBrand === 'all' ? '<dt>Product</dt><dd>' + product + '</dd>' : ''}
-              <dt>Vendor</dt><dd>${vendor}</dd>
+              ${currentBrand === 'all' ? '<dt>Product(s)</dt><dd>' + getProductBadges(p) + '</dd>' : ''}
+              <dt>Vendor(s)</dt><dd>${getVendorBadges(p)}</dd>
               <dt>Segment</dt><dd style="text-transform:capitalize">${p.segment}</dd>
               <dt>Enrollment Date</dt><dd>${p.enrolled}</dd>
               <dt>Volume</dt><dd>${p.vol} claims</dd>
@@ -1168,9 +1204,12 @@ function renderPharmacy(opts) {
               ${p.sigs.map(sid => {
                 const sig = bd.signals.find(s => s.id === sid);
                 if (!sig) return '';
-                return `<div style="padding:6px 0;border-bottom:1px solid var(--border);font-size:12px">
-                  ${priorityBadge(sig.tier)} <strong>${sig.name}</strong>
-                  <div style="color:var(--text-secondary);margin-top:2px">${sig.desc}</div>
+                return `<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:12px">
+                  <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                    ${priorityBadge(sig.tier)} <strong>${sig.name}</strong>
+                  </div>
+                  <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;margin-top:5px">${getProductBadges(sig)} ${getVendorBadges(sig)}</div>
+                  <div style="color:var(--text-secondary);margin-top:4px">${sig.desc}</div>
                 </div>`;
               }).join('')}
               <div class="action-btns" style="margin-top:12px">
