@@ -226,7 +226,7 @@ body{font-family:'Noto Sans',sans-serif;font-size:13px;color:var(--text);backgro
 .product-badge.nurtec{background:#e8f4fd;color:var(--pfizer-blue)}
 .product-badge.eucrisa{background:#f5f0ff;color:var(--purple)}
 .vendor-label{font-size:10.5px;color:var(--text-muted);font-weight:500}
-.hide-product-col .col-product{display:none}
+.hide-product-col .col-product-only{display:none}
 
 /* Responsive */
 @media(max-width:1100px){
@@ -327,7 +327,7 @@ body{font-family:'Noto Sans',sans-serif;font-size:13px;color:var(--text);backgro
         <option value="reversal">Reversal Anomaly</option>
       </select>
       <select class="filter-select" id="filter-pharmacy"></select>
-      <select class="filter-select col-product" id="filter-vendor">
+      <select class="filter-select" id="filter-vendor">
         <option value="all">All Vendors</option>
         <option value="Relay">Relay</option>
         <option value="ConnectiveRx">ConnectiveRx</option>
@@ -345,8 +345,8 @@ body{font-family:'Noto Sans',sans-serif;font-size:13px;color:var(--text);backgro
           <th class="sortable" data-sort-sig="category">Category <span class="sort-arrow"></span></th>
           <th class="sortable active-sort" data-sort-sig="priority">Priority <span class="sort-arrow">&#9660;</span></th>
           <th class="sortable" data-sort-sig="pharmacy">Pharmacy <span class="sort-arrow"></span></th>
-          <th class="col-product sortable" data-sort-sig="product">Product <span class="sort-arrow"></span></th>
-          <th class="col-product">Vendor</th>
+          <th class="col-product-only sortable" data-sort-sig="product">Product <span class="sort-arrow"></span></th>
+          <th>Vendor</th>
           <th class="sortable" data-sort-sig="exposure">$ Exposure <span class="sort-arrow"></span></th>
           <th class="sortable" data-sort-sig="detected">Detected <span class="sort-arrow"></span></th>
           <th>Status</th>
@@ -369,8 +369,8 @@ body{font-family:'Noto Sans',sans-serif;font-size:13px;color:var(--text);backgro
           <th class="sortable" data-sort-pharm="name">Pharmacy <span class="sort-arrow"></span></th>
           <th class="sortable" data-sort-pharm="city">City <span class="sort-arrow"></span></th>
           <th class="sortable" data-sort-pharm="segment">Segment <span class="sort-arrow"></span></th>
-          <th class="col-product sortable" data-sort-pharm="product">Product <span class="sort-arrow"></span></th>
-          <th class="col-product">Vendor</th>
+          <th class="col-product-only sortable" data-sort-pharm="product">Product <span class="sort-arrow"></span></th>
+          <th>Vendor</th>
           <th class="sortable active-sort" data-sort-pharm="risk">Risk Score <span class="sort-arrow">&#9660;</span></th>
           <th class="sortable" data-sort-pharm="exposure">$ Exposure <span class="sort-arrow"></span></th>
           <th class="sortable" data-sort-pharm="signals"># Signals <span class="sort-arrow"></span></th>
@@ -397,8 +397,8 @@ body{font-family:'Noto Sans',sans-serif;font-size:13px;color:var(--text);backgro
           <th class="sortable active-sort" data-sort-watch="name">Pharmacy <span class="sort-arrow">&#9660;</span></th>
           <th class="sortable" data-sort-watch="city">City <span class="sort-arrow"></span></th>
           <th class="sortable" data-sort-watch="segment">Segment <span class="sort-arrow"></span></th>
-          <th class="col-product">Product</th>
-          <th class="col-product">Vendor</th>
+          <th class="col-product-only">Product</th>
+          <th>Vendor</th>
           <th class="sortable" data-sort-watch="risk">Risk Score <span class="sort-arrow"></span></th>
           <th class="sortable" data-sort-watch="exposure">$ Exposure <span class="sort-arrow"></span></th>
           <th class="sortable" data-sort-watch="signals"># Signals <span class="sort-arrow"></span></th>
@@ -1041,8 +1041,8 @@ function applySignalFilters() {
       <td>${CATEGORY_LABELS[s.group] || s.group}</td>
       <td>${priorityBadge(s.tier)}</td>
       <td>${pharmNames}</td>
-      <td class="col-product">${product}</td>
-      <td class="col-product"><span style="font-size:11px;color:var(--text-secondary)">${vendor}</span></td>
+      <td class="col-product-only">${product}</td>
+      <td><span style="font-size:11px;color:var(--text-secondary)">${vendor}</span></td>
       <td>${exposure > 0 ? '<span class="exposure small">' + formatMoney(exposure) + '</span>' : '<span style="color:var(--text-muted);font-size:11px">—</span>'}</td>
       <td style="font-size:11px;color:var(--text-muted)">${s.daysAgo}d ago</td>
       <td><span class="status-pill ${statusCls}">${status}</span></td>
@@ -1141,8 +1141,8 @@ function renderPharmacy(opts) {
       <td><strong>${p.name}</strong>${isInv ? '<span class="inv-indicator">Investigating</span>' : ''}</td>
       <td>${p.city}</td>
       <td style="text-transform:capitalize">${p.segment}</td>
-      <td class="col-product">${product}</td>
-      <td class="col-product"><span style="font-size:11px;color:var(--text-secondary)">${vendor}</span></td>
+      <td class="col-product-only">${product}</td>
+      <td><span style="font-size:11px;color:var(--text-secondary)">${vendor}</span></td>
       <td><strong>${p.risk}</strong></td>
       <td><span class="exposure small">${formatMoney(exposure)}</span></td>
       <td>${p.sigs.length}</td>
@@ -1153,7 +1153,7 @@ function renderPharmacy(opts) {
         <div class="pharm-detail-content">
           <div class="pharm-detail-grid">
             <div class="pharm-detail-info">
-              <dt>Product</dt><dd>${product}</dd>
+              ${currentBrand === 'all' ? '<dt>Product</dt><dd>' + product + '</dd>' : ''}
               <dt>Vendor</dt><dd>${vendor}</dd>
               <dt>Segment</dt><dd style="text-transform:capitalize">${p.segment}</dd>
               <dt>Enrollment Date</dt><dd>${p.enrolled}</dd>
@@ -1335,8 +1335,8 @@ function renderWatchList() {
       <td><strong>${pharm.name}</strong></td>
       <td>${pharm.city}</td>
       <td style="text-transform:capitalize">${pharm.segment}</td>
-      <td class="col-product">${product}</td>
-      <td class="col-product"><span style="font-size:11px;color:var(--text-secondary)">${vendor}</span></td>
+      <td class="col-product-only">${product}</td>
+      <td><span style="font-size:11px;color:var(--text-secondary)">${vendor}</span></td>
       <td><strong>${pharm.risk}</strong></td>
       <td><span class="exposure small">${formatMoney(exposure)}</span></td>
       <td>${pharm.sigs.length}</td>
